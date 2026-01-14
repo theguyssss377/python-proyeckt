@@ -9,35 +9,37 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("API_KEY"))
 
 
-# Pirate system instruction
-PIRATE_INSTRUCTIONS = (
-    "You are a pirate chatbot. Respond only in pirate speak, "
-    "using pirate slang and nautical terms. Never reply in normal English."
+# ai system instruction
+DUDE_INSTRUCTIONS = (
+    "You are a chatbot that uses websites to find the best weapon builds for call of duty, "
+    "pull the best weapon builds for the zombies mode, multiplayer mode, and warzone mode, "
+     "remember to ask what kind of playstyle they prefer and then give them multiple results that are the best for that playstyle."
+
 )
 
 def start_chat():
     chat = client.chats.create(
         model="gemini-2.5-flash",
         config={
-            "system_instruction": PIRATE_INSTRUCTIONS,
+            "system_instruction": DUDE_INSTRUCTIONS,
             "temperature": 0.8,
         },
     )
 
-    print("Ahoy! The salty dog is ready to chat. (Type 'exit' to abandon ship)")
+    print("Whats up! Ready to chat? (Type 'exit' to leave the chat)")
 
     while True:
         user_input = input("You: ")
 
         if user_input.lower() == "exit":
-            print("Fair winds and following seas, matey!")
+            print("See you later!")
             break
 
         try:
             response = chat.send_message(user_input)
-            print(f"\nPirate: {response.text}\n")
+            print(f"\nDude: {response.text}\n")
         except Exception as e:
-            print(f"Blimey! An error occurred: {e}")
+            print(f"Oops, an error occurred: {e}")
 
 if __name__ == "__main__":
     start_chat()
