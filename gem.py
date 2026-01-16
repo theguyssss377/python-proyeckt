@@ -1,13 +1,17 @@
 from google import genai
 import os
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
+#wzstats.gg
+#codmunity.gg
 # Load environment variables
 load_dotenv()
 
 # Create client
 client = genai.Client(api_key=os.getenv("API_KEY"))
 
+soup = BeautifulSoup("<p>Some<b>bad<i>HTML")
 
 # ai system instruction
 DUDE_INSTRUCTIONS = (
@@ -20,8 +24,7 @@ DUDE_INSTRUCTIONS = (
 def start_chat():
     chat = client.chats.create(
         model="gemini-2.5-flash",
-        config={
-            "system_instruction": DUDE_INSTRUCTIONS,
+        config={  DUDE_INSTRUCTIONS,
             "temperature": 0.8,
         },
     )
@@ -43,3 +46,36 @@ def start_chat():
 
 if __name__ == "__main__":
     start_chat()
+
+
+print(soup.prettify())
+<html>
+ <body>
+  <p>
+   Some
+   <b>
+    bad
+    <i>
+     HTML
+    </i>
+   </b>
+  </p>
+ </body>
+</html>
+>>> soup.find(string="bad")
+'bad'
+>>> soup.i
+<i>HTML</i>
+#
+>>> soup = BeautifulSoup("<tag1>Some<tag2/>bad<tag3>XML", "xml")
+#
+>>> print(soup.prettify())
+<?xml version="1.0" encoding="utf-8"?>
+<tag1>
+ Some
+ <tag2/>
+ bad
+ <tag3>
+  XML
+ </tag3>
+</tag1>
