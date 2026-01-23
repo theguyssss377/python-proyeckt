@@ -66,7 +66,7 @@ print(soup.prettify())
 'bad'
 >>> soup.i
 <i>HTML</i>
-#
+#p
 >>> soup = BeautifulSoup("<tag1>Some<tag2/>bad<tag3>XML", "xml")
 #
 >>> print(soup.prettify())
