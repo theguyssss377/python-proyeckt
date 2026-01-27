@@ -1,7 +1,10 @@
 from google import genai
 import os
 from dotenv import load_dotenv
+import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
+
 
 #wzstats.gg
 #codmunity.gg
@@ -21,10 +24,88 @@ DUDE_INSTRUCTIONS = (
 
 )
 
+
+#mode, playstyle = get_player_preferences()
+
+#if mode == "warzone":
+ #  builds = scrape_warzone_builds("ex")
+#else:
+#   builds = []
+#   context = format_builds_for_ai(builds)
+#
+ #  prompt = f"""
+  # User playstyle{playstyle}
+   #Game mode: {mode}
+  # Here are the current top-performing builds from stat website:
+  # {context}
+#recommend the best 3 builds for this playstyle.
+#   Explain why each build works.
+# """
+
+
+
+
+
+
+
+def scrape_warzone_builds(url):
+ response = requests.get(url, headers=HEADERS, timeout=10)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+ 
+ builds = []
+
+ weapon_cards = soup.select(".weapon-card")
+
+ for card in weapon_cards:
+   weapon_name = card.select_one(".weapon-name")
+   attachments = card.select(".attachment")
+
+   builds.append({
+     "weapon": weapon_name.text.strip() if weapon_name else "Uknown", 
+     "attachments": [a.text.strip() for a in attachments],
+     "mode":"warzone"
+   })
+   return builds
+
+
+def scrape_with_browser(url):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url)
+        page.wait_for_timeout(3000)
+
+        html = page.content()
+        browser.close()
+
+    soup = BeautifulSoup(html, "html.parser")
+    return soup
+
+
+def format_builds_for_ai(builds):
+  formatted = ""
+  for b in builds:
+    formatted +=f"""
+    weapon: {b['weapon']}
+    Attachments:
+    {', '.join(b['attachments'])}
+
+    """
+    return formatted
+
+
+def get_player_preferences():
+  mode = input("Which mode? (zombies / multiplayer / warzone):")
+  playstyle = input("whats your playstyle? (aggressive / stealth/ long-range / balanced):")
+  return mode.lower(), playstyle.lower()
+
 def start_chat():
     chat = client.chats.create(
         model="gemini-2.5-flash",
-        config={  DUDE_INSTRUCTIONS,
+        config={  
+          "system_instruction": DUDE_INSTRUCTIONS,
             "temperature": 0.8,
         },
     )
@@ -39,43 +120,31 @@ def start_chat():
             break
 
         try:
-            response = chat.send_message(user_input)
-            print(f"\nDude: {response.text}\n")
-        except Exception as e:
-            print(f"Oops, an error occurred: {e}")
+            mode, playstyle = get_player_preferences()
+        if mode == "warzone":
+          builds = scrape_warzone_builds("ex")
+    else:
+     builds = []
 
-if __name__ == "__main__":
-    start_chat()
+    context= format_builds_for_ai(builds)
+
+    prompt = f"""
+    user playstyle: {playstyle}
+    gamemode:{mode}
+
+    Here are the current top-performing builds from stat websites:
+    {context}
+    recommend the best 3 builds for this playstyle. 
+    Explain why each build works.
+    """ 
+    response = chat.send_message(prompt)
+    print(f"\nDude: {response.text}\n")
+
+    except Exception as e:
+print(f"Oops, an error occured: {e}")
+if__name__=="__main__":
+start_chat()
 
 
-print(soup.prettify())
-<html>
- <body>
-  <p>
-   Some
-   <b>
-    bad
-    <i>
-     HTML
-    </i>
-   </b>
-  </p>
- </body>
-</html>
->>> soup.find(string="bad")
-'bad'
->>> soup.i
-<i>HTML</i>
-#p
->>> soup = BeautifulSoup("<tag1>Some<tag2/>bad<tag3>XML", "xml")
-#
->>> print(soup.prettify())
-<?xml version="1.0" encoding="utf-8"?>
-<tag1>
- Some
- <tag2/>
- bad
- <tag3>
-  XML
- </tag3>
-</tag1>
+
+ 
