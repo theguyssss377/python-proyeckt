@@ -14,6 +14,10 @@ load_dotenv()
 # Create client
 client = genai.Client(api_key=os.getenv("API_KEY"))
 
+Headers = {
+   "User-Agent": "Mozilla/5.0"
+}
+
 soup = BeautifulSoup("<p>Some<b>bad<i>HTML")
 
 # ai system instruction
@@ -44,21 +48,58 @@ DUDE_INSTRUCTIONS = (
 
 
 
+def scrape_wzstats():
+   url = "https://wzstats.gg/meta"
+   response = requests.get(url, headers=HEADERS, timeout=10)
+   response.raise_for_status()
+   soup = BeautifulSoup(response.text, "html.parser")
 
+   builds =[]
+   cards = soup.select(".weapon-card")
+
+   for card in cards:
+      name= card.select_one(".weapon-name")
+      attachments = card.select(".attachment")
+      builds.append({
+         "weapon": name.text.strip() if name else "Uknown"
+         "attachments":[a.text.strip() for a in attachments],
+         "mode":"warzone"
+      })
+      return builds
+
+
+def scrape_codmunity():
+   url = "https://codmunity.gg/meta"
+   response =requests.get(url, headers=HEADERS, timeout=10)
+   response.raise_for_status()
+   soup = beautifulSoup(response.text, "html.parser")
+   builds =[]
+   cards = soup.select(".weapon-card")
+   
+   for card in cards:
+      name = card.select_one(".weapon-name")
+      attachments = card.select(".attachment")
+      builds.append({
+         "weapon": name.text.strip() if name else "Uknown",
+         "attachments": [a.text.strip() for a in attachments],
+         "mode": "multiplayer/zombies"
+      })
+
+      return builds
 
 
 
 def scrape_warzone_builds(url):
  response = requests.get(url, headers=HEADERS, timeout=10)
-    response.raise_for_status()
+response.raise_for_status()
 
-    soup = BeautifulSoup(response.text, "html.parser")
+soup = BeautifulSoup(response.text, "html.parser")
  
- builds = []
+builds = []
 
- weapon_cards = soup.select(".weapon-card")
+weapon_cards = soup.select(".weapon-card")
 
- for card in weapon_cards:
+for card in weapon_cards:
    weapon_name = card.select_one(".weapon-name")
    attachments = card.select(".attachment")
 
