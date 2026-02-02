@@ -14,7 +14,7 @@ load_dotenv()
 # Create client
 client = genai.Client(api_key=os.getenv("API_KEY"))
 
-Headers = {
+HEADERS = {
    "User-Agent": "Mozilla/5.0"
 }
 
@@ -61,10 +61,10 @@ def scrape_wzstats():
       name= card.select_one(".weapon-name")
       attachments = card.select(".attachment")
       builds.append({
-         "weapon": name.text.strip() if name else "Uknown"
+         "weapon": name.text.strip() if name else "Uknown",
          "attachments":[a.text.strip() for a in attachments],
-         "mode":"warzone"
-      })
+         "mode":"warzone" 
+         })
       return builds
 
 
@@ -89,26 +89,28 @@ def scrape_codmunity():
 
 
 
-def scrape_warzone_builds(url):
- response = requests.get(url, headers=HEADERS, timeout=10)
-response.raise_for_status()
+#def scrape_warzone_builds(url):
+# response = requests.get(url, headers=HEADERS, timeout=10)
+#esponse.raise_for_status()
 
-soup = BeautifulSoup(response.text, "html.parser")
+#soup = BeautifulSoup(response.text, "html.parser")
  
-builds = []
+#builds = []
 
-weapon_cards = soup.select(".weapon-card")
+#weapon_cards = soup.select(".weapon-card")
 
-for card in weapon_cards:
-   weapon_name = card.select_one(".weapon-name")
-   attachments = card.select(".attachment")
+#for card in weapon_cards:
+ #  weapon_name = card.select_one(".weapon-name")
+  # attachments = card.select(".attachment")
 
-   builds.append({
-     "weapon": weapon_name.text.strip() if weapon_name else "Uknown", 
-     "attachments": [a.text.strip() for a in attachments],
-     "mode":"warzone"
-   })
-   return builds
+  # builds.append({
+   #  "weapon": weapon_name.text.strip() if weapon_name else "Uknown", 
+    # "attachments": [a.text.strip() for a in attachments],
+     #"mode":"warzone"
+  # })  
+   
+   
+   #return builds 
 
 
 def scrape_with_browser(url):
@@ -129,9 +131,9 @@ def format_builds_for_ai(builds):
   formatted = ""
   for b in builds:
     formatted +=f"""
-    weapon: {b['weapon']}
-    Attachments:
-    {', '.join(b['attachments'])}
+    Weapon: {b['weapon']}
+    Attachments: {', '.join(b['attachments'])}
+Mode: {b['mode']}
 
     """
     return formatted
@@ -162,15 +164,16 @@ def start_chat():
 
         try:
             mode, playstyle = get_player_preferences()
+
         if mode == "warzone":
-          builds = scrape_warzone_builds("ex")
+            builds = scrape_warzone_builds("https://wzstats.gg/meta")
     else:
-     builds = []
+    builds = []
 
-    context= format_builds_for_ai(builds)
+context= format_builds_for_ai(builds)
 
-    prompt = f"""
-    user playstyle: {playstyle}
+prompt = f"""
+    User playstyle: {playstyle}
     gamemode:{mode}
 
     Here are the current top-performing builds from stat websites:
@@ -178,13 +181,15 @@ def start_chat():
     recommend the best 3 builds for this playstyle. 
     Explain why each build works.
     """ 
-    response = chat.send_message(prompt)
-    print(f"\nDude: {response.text}\n")
+response = chat.send_message(prompt)
+print(f"\nDude: {response.text}\n")
 
-    except Exception as e:
+except Exception as e:
 print(f"Oops, an error occured: {e}")
-if__name__=="__main__":
-start_chat()
+
+
+if __name__== "__main__":
+    start_chat()
 
 
 
