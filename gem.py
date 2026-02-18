@@ -72,7 +72,7 @@ def scrape_codmunity():
    url = "https://codmunity.gg/meta"
    response =requests.get(url, headers=HEADERS, timeout=10)
    response.raise_for_status()
-   soup = beautifulSoup(response.text, "html.parser")
+   soup = BeautifulSoup(response.text, "html.parser")
    builds =[]
    cards = soup.select(".weapon-card")
    
@@ -112,23 +112,11 @@ def scrape_codmunity():
    
    #return builds 
 
-
-def scrape_with_browser(url):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(url)
-        page.wait_for_timeout(3000)
-
-        html = page.content()
-        browser.close()
-
-    soup = BeautifulSoup(html, "html.parser")
-    return soup
-
+ 
 
 def format_builds_for_ai(builds):
   formatted = ""
+
   for b in builds:
     formatted +=f"""
     Weapon: {b['weapon']}
@@ -162,30 +150,30 @@ def start_chat():
             print("See you later!")
             break
 
-        try:
+        try: 
             mode, playstyle = get_player_preferences()
 
-        if mode == "warzone":
-            builds = scrape_warzone_builds("https://wzstats.gg/meta")
-    else:
-    builds = []
+            if mode == "warzone":
+                builds = scrape_wzstats()
+            else:
+                builds = scrape_codmunity()
+        except Exception as e:
+            print(f"Oops, an error occured: {e}")
 
-context= format_builds_for_ai(builds)
 
-prompt = f"""
-    User playstyle: {playstyle}
-    gamemode:{mode}
+    context = format_builds_for_ai(builds)
 
-    Here are the current top-performing builds from stat websites:
-    {context}
-    recommend the best 3 builds for this playstyle. 
-    Explain why each build works.
-    """ 
-response = chat.send_message(prompt)
-print(f"\nDude: {response.text}\n")
+    prompt = f"""
+        User playstyle: {playstyle}
+        Game mode: {mode}
 
-except Exception as e:
-print(f"Oops, an error occured: {e}")
+        Here are the current top-performing builds from stat websites:
+        {context}
+        Recommend the best 3 builds for this playstyle. 
+        Explain why each build works.
+        """ 
+    response = chat.send_message(prompt)
+    print(f"\nDude: {response.text}\n")
 
 
 if __name__== "__main__":
